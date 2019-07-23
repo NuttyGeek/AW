@@ -38,9 +38,11 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
@@ -51,6 +53,7 @@ import android.widget.ToggleButton;
 import android.widget.VideoView;
 
 import com.example.bhati.routeapplication.Database.DBHelper;
+import com.example.bhati.routeapplication.Model.ColorText;
 import com.example.bhati.routeapplication.Model.Recorder;
 import com.example.bhati.routeapplication.MyAppl;
 import com.example.bhati.routeapplication.R;
@@ -194,6 +197,11 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     boolean is_pollyline_tounched = false;
     int previous_second;
     DBHelper dd;
+    LinearLayout menuLayout;
+    ListView colorList;
+    ArrayList<ColorText> mainColorTextList;
+    ColorAdapter colorAdapter;
+    ImageView audioImage;
 
     private ArrayList<String> listChumktime;
     private ArrayList<String> listChumktext;
@@ -216,12 +224,16 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         list_overlay_polyline = new ArrayList<>();
         mapOfPosts = new HashMap<Integer, Integer>();
         initialize();
-//         init UI
+//      region init UI
         btnUpload = findViewById(R.id.btnUpload);
         progress_bar_speechto_text = findViewById(R.id.progress_bar_speechto_text);
         btnSpeechToText = findViewById(R.id.btnSpeechToText);
         seekbar_video = findViewById(R.id.seekbar_video);
         imgLogout = findViewById(R.id.logout);
+        audioImage = findViewById(R.id.menu_button);
+        menuLayout = findViewById(R.id.menu);
+        colorList = findViewById(R.id.color_list);
+//        endregion
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() != null) {
             imgLogout.setVisibility(View.VISIBLE);
@@ -232,7 +244,29 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         String afile = bundle.getString("AUDIOFILE");
         filePath = afile;
 
+//       region visibilities
         btnUpload.setVisibility(View.GONE);
+        menuLayout.setVisibility(View.GONE);
+//       endregion
+
+//        region init list view
+        mainColorTextList = new ArrayList<>();
+        //mainColorTextList.add(new ColorText("#ff0000", "Text 1"));
+//      initializing the adapter
+        colorAdapter = new ColorAdapter(this, mainColorTextList);
+//      setting the adapter
+        colorList.setAdapter(colorAdapter);
+//      setting click listener on item
+        colorList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Toast.makeText(SavingActivity.this, mainColorTextList.get(i).getText(), Toast.LENGTH_LONG).show();
+                showDialogWithText(mainColorTextList.get(i).getText());
+            }
+        });
+//        endregion
+
+
         btnUpload.setOnClickListener(v -> {
 
             /*Toast.makeText(SavingActivity.this, "file is"+filePath, Toast.LENGTH_SHORT).show();
@@ -506,6 +540,9 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         btnSpeechToText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //         hiding the speech to text button
+                btnSpeechToText.setVisibility(View.GONE);
+
                 dd = new DBHelper(SavingActivity.this);
                 String speech =dd.getSpeechData(filePath);
                 Log.v("nuttygeek", "speech"+speech);
@@ -595,6 +632,10 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                                 }
                                 Log.v("nuttygeek","list chunk: (0) "+listChumktext.get(0).toString());
                             }
+//                          showing the menu layout
+                            menuLayout.setVisibility(View.VISIBLE);
+//                          testing
+                            showColorList(null, null);
                             ShowAlertDialogList();
                             //ShowAlertDialogWithListview();
 //                           endregion
@@ -1727,6 +1768,10 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
 
     }
 
+    /**
+     * get random color strings
+     * @return color string
+     */
     protected String getColorString() {
         String SALTCHARS = "ABCDEF1234567890";
         StringBuilder salt = new StringBuilder();
@@ -1754,8 +1799,10 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         }
         properties.colorstr.put(cdata,cdata);
         properties.colorsdata.add(cdata);
+        Log.d("nuttygeek", "adding color: "+cdata);
     }
 //    endregion
+//    region adding polylines on map
     public void addOverLayPlouline(List<LatLng> latLngList,int ct) {
 
         PolylineOptions lineOptions = new PolylineOptions();
@@ -1766,12 +1813,13 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         map.addPolyline(lineOptions
                 .width(10f)
                 .color(Color.parseColor(properties.colorsdata.get(ct)))
-                .alpha(1f)
+                .alpha(0.5f)
                 .addAll(latLngList));
         Log.d("MapPoly", "added");
         Log.v("nuttygeek", "color: "+properties.colorsdata.get(ct));
         //list_overlay_polyline.clear();
     }
+//   endregion
 
 //    region adding audio ploylines on map
     public void AddNewPollyLine() {
@@ -1823,6 +1871,96 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             }
             addOverLayPlouline(lists_pollline.get(k),j);
         }
+    }
+//    endregion
+
+    //        region color list functionality
+    /**
+     * get the list of colors and
+     *
+     */
+    public void showColorList(ArrayList<String> colors, ArrayList<String> texts){
+//    make  a list of color text objects
+//        get list of texts
+        List<String> colorList = properties.colorsdata;
+        ArrayList<String> textList = listChumktext;
+        for (int i=0; i<textList.size(); i++){
+           String color = colorList.get(i);
+           String text = textList.get(i);
+           ColorText colorTextObj = new ColorText(color, text);
+           mainColorTextList.add(colorTextObj);
+        }
+        colorAdapter.notifyDataSetChanged();
+
+    }
+//        make adapter for color list
+//    region custom adapter for color list
+    class ColorAdapter extends BaseAdapter implements View.OnClickListener {
+        Context context;
+        ArrayList<ColorText> colorTextList;
+
+        public ColorAdapter(Context context, ArrayList<ColorText> colorTextList){
+            this.context = context;
+            this.colorTextList = colorTextList;
+        }
+
+    @Override
+    public int getCount() {
+        return colorTextList.size();
+    }
+
+    @Override
+    public Object getItem(int i) {
+        return colorTextList.get(i);
+    }
+
+    @Override
+    public long getItemId(int i) {
+        return 0;
+    }
+
+    @Override
+    public View getView(int i, View view, ViewGroup viewGroup) {
+        view =  getLayoutInflater().inflate(R.layout.color_list_item, null);
+        View colorView = view.findViewById(R.id.color);
+        colorView.setBackgroundColor(Color.parseColor(colorTextList.get(i).getColor()));
+        return view;
+    }
+
+    @Override
+    public void onClick(View view) {
+        Toast.makeText(context, colorTextList.get(0).getColor(), Toast.LENGTH_SHORT).show();
+    }
+}
+//    endregion
+
+//    region showing dialog with text
+
+    /**
+     * take the text and show it in a Alert Dialog Box
+     */
+    public void showDialogWithText(String text){
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(SavingActivity.this);
+//         set the title of the dialog
+        dialogBuilder.setTitle("Audio Chunk");
+//         set the message fo the dialog
+        dialogBuilder.setMessage(text);
+//         if keyword is pressed show the toast
+        dialogBuilder.setPositiveButton("Keyword", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Toast.makeText(SavingActivity.this, "Functionality not added yet", Toast.LENGTH_SHORT).show();
+            }
+        });
+//         if cancel is pressed dismiss the dialog
+        dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+//      showing the dialog
+        dialogBuilder.show();
     }
 //    endregion
 
