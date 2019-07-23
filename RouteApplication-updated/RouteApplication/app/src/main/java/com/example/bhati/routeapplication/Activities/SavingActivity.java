@@ -1143,6 +1143,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                 .title("End point"));
     }
 
+//    region draw main polyline
     private void draw_ployline(List<LatLng> latLngList) {
         mpolines = map.addPolyline(new PolylineOptions()
                 .width(20f)
@@ -1150,6 +1151,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                 .alpha(1f)
                 .addAll(latLngList));
     }
+//    endregion
 
     @SuppressLint("NewApi")
     private void marker_anim(long time) {
@@ -1815,7 +1817,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                 .color(Color.parseColor(properties.colorsdata.get(ct)))
                 .addAll(latLngList));
         Log.d("MapPoly", "added");
-        Log.v("nuttygeek", "color: "+properties.colorsdata.get(ct));
+        Log.d("nuttygeek", "color: "+properties.colorsdata.get(ct)+" ct: "+ct);
         //list_overlay_polyline.clear();
     }
 //   endregion
@@ -1970,18 +1972,18 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     /**
      * this fxn shows the loading diaog when we are waiting for the server respons
      */
-    public void showLoadingDialog(){
+    public void showLoadingDialog(boolean flag){
 
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
         dialog.setTitle("Loading ...");
         dialog.setMessage("Please wait while we are loading the response for you");
-        dialog.setPositiveButton("Okay! I am Waiting", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                //dialogInterface.dismiss();
-            }
-        });
-//        dialog.setCancelable(false);
+        dialog.setCancelable(false);
+//        if true is passed dialog will be shown and if false will be passed dialog will be closed
+        if(flag){
+            dialog.show();
+        }else{
+            dialog.show().dismiss();
+        }
        dialog.show();
 
     }
