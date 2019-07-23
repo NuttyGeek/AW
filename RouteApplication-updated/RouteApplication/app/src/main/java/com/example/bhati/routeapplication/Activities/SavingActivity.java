@@ -632,11 +632,9 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                                 }
                                 Log.v("nuttygeek","list chunk: (0) "+listChumktext.get(0).toString());
                             }
-//                          showing the menu layout
-                            menuLayout.setVisibility(View.VISIBLE);
 //                          testing
                             showColorList(null, null);
-                            ShowAlertDialogList();
+                            //ShowAlertDialogList();
                             //ShowAlertDialogWithListview();
 //                           endregion
 
@@ -916,7 +914,9 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                             listChumktime.add(chumk);
                         }
                     }
-                    ShowAlertDialogList();
+//                    don't need it
+                    //ShowAlertDialogList();
+                    showColorList(null, null);
                     //ShowAlertDialogWithListview();
 
                 }catch (Exception ex)
@@ -1813,7 +1813,6 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         map.addPolyline(lineOptions
                 .width(10f)
                 .color(Color.parseColor(properties.colorsdata.get(ct)))
-                .alpha(0.5f)
                 .addAll(latLngList));
         Log.d("MapPoly", "added");
         Log.v("nuttygeek", "color: "+properties.colorsdata.get(ct));
@@ -1891,6 +1890,8 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
            mainColorTextList.add(colorTextObj);
         }
         colorAdapter.notifyDataSetChanged();
+//      showing the menu layout
+        menuLayout.setVisibility(View.VISIBLE);
 
     }
 //        make adapter for color list
@@ -1961,6 +1962,28 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         });
 //      showing the dialog
         dialogBuilder.show();
+    }
+//    endregion
+
+//    region show loading dialog
+
+    /**
+     * this fxn shows the loading diaog when we are waiting for the server respons
+     */
+    public void showLoadingDialog(){
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle("Loading ...");
+        dialog.setMessage("Please wait while we are loading the response for you");
+        dialog.setPositiveButton("Okay! I am Waiting", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                //dialogInterface.dismiss();
+            }
+        });
+//        dialog.setCancelable(false);
+       dialog.show();
+
     }
 //    endregion
 
