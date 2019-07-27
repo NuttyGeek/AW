@@ -8,12 +8,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.location.Location;
-import android.media.AudioRecord;
 import android.media.MediaMetadataRetriever;
-import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -21,12 +18,10 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -40,7 +35,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -53,31 +47,17 @@ import android.widget.ToggleButton;
 import android.widget.VideoView;
 
 import com.example.bhati.routeapplication.Database.DBHelper;
+import com.example.bhati.routeapplication.Interface.OnMarkerReadyListener;
 import com.example.bhati.routeapplication.Model.ColorText;
 import com.example.bhati.routeapplication.Model.Recorder;
 import com.example.bhati.routeapplication.MyAppl;
 import com.example.bhati.routeapplication.R;
-import com.example.bhati.routeapplication.directionhelpers.FetchURL;
 import com.example.bhati.routeapplication.directionhelpers.TaskLoadedCallback;
-import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
+import com.example.bhati.routeapplication.helpers.MapAndVideoSeekHelper;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.FFmpegLoadBinaryResponseHandler;
-import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException;
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
-import com.google.api.gax.core.CredentialsProvider;
-import com.google.api.gax.core.FixedCredentialsProvider;
-import com.google.auth.Credentials;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.cloud.speech.v1p1beta1.RecognitionAudio;
-import com.google.cloud.speech.v1p1beta1.RecognitionConfig;
-import com.google.cloud.speech.v1p1beta1.SpeechRecognitionAlternative;
-import com.google.cloud.speech.v1p1beta1.SpeechRecognitionResult;
-import com.google.cloud.speech.v1p1beta1.RecognizeResponse;
-import com.google.cloud.speech.v1p1beta1.SpeechClient;
-import com.google.cloud.speech.v1p1beta1.SpeechSettings;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.protobuf.ByteString;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
@@ -100,34 +80,24 @@ import com.android.volley.request.SimpleMultiPartRequest;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import android.view.ViewGroup;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 
 //import com.example.audiolib.AndroidAudioConverter;
@@ -166,6 +136,8 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     private String str_aurdio_file;
     private String[] arrayStr;
     private String[] arrayStr1;
+//  to get the distinct no of polylines created on map
+    HashSet<LatLng> pointsSet = new HashSet<>();
 
     private FirebaseAuth mAuth;
     int count = 0;
@@ -202,6 +174,9 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     ArrayList<ColorText> mainColorTextList;
     ColorAdapter colorAdapter;
     ImageView audioImage;
+//  Text to Speech Linear Layout
+    LinearLayout speechToTextLayout;
+    MapAndVideoSeekHelper mapAndVideoSeekHelper;
 
     private ArrayList<String> listChumktime;
     private ArrayList<String> listChumktext;
@@ -225,6 +200,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         mapOfPosts = new HashMap<Integer, Integer>();
         initialize();
 //      region init UI
+        speechToTextLayout = findViewById(R.id.text_speech_layout);
         btnUpload = findViewById(R.id.btnUpload);
         progress_bar_speechto_text = findViewById(R.id.progress_bar_speechto_text);
         btnSpeechToText = findViewById(R.id.btnSpeechToText);
@@ -249,19 +225,38 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         menuLayout.setVisibility(View.GONE);
 //       endregion
 
-//        region init list view
+//        region init color list view
         mainColorTextList = new ArrayList<>();
         //mainColorTextList.add(new ColorText("#ff0000", "Text 1"));
 //      initializing the adapter
         colorAdapter = new ColorAdapter(this, mainColorTextList);
 //      setting the adapter
         colorList.setAdapter(colorAdapter);
-//      setting click listener on item
+//      setting click listener on color items
         colorList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Toast.makeText(SavingActivity.this, mainColorTextList.get(i).getText(), Toast.LENGTH_LONG).show();
                 showDialogWithText(mainColorTextList.get(i).getText());
+//              region calling simulate map click function
+                //        create a static map location for testing, this location will be shown on map on every color click
+                Log.v("nuttygeek", "[Color Clicked]: "+i);
+//              getting the first point of the respective polyline from properties class
+                LatLng point = properties.firstCoordinatesOfPolylines.get(i);
+                mapAndVideoSeekHelper = new MapAndVideoSeekHelper();
+                mapAndVideoSeekHelper.simulateMapClick(getApplicationContext(), point, smallestDistance, list, closestLocation, new OnMarkerReadyListener() {
+                            @Override
+                            public void onSuccess(double smallestDistance, LatLng latlng, int position) {
+                                Log.v("nuttygeek", "[Simulate Map Click]: adding marker");
+                                addMarkerNew(smallestDistance, latlng, position);
+                            }
+                            @Override
+                            public void onFailure() {
+                                Toast.makeText(getApplicationContext(), "Please click on path", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                );
+//                endregion
             }
         });
 //        endregion
@@ -395,11 +390,8 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             } else {
                 lng[i] = Double.parseDouble(arrayStr[i]);
             }
-
             Log.d(TAG, "onCreate:lat  =  " + i + " = " + lat[i] + " j = " + i + " lng =  " + lng[i]);
-
         }
-
         for (int i = 0; i < arrayStr.length; i++) {
             if (lat[i] != 0 && lng[i + 1] != 0) {
                 Log.d(TAG, "onCreate: lat = " + i + " " + lat[i] + " lng " + lng[i + 1]);
@@ -412,7 +404,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         seekbar_video.setVisibility(View.GONE);
         videoView.setVideoURI(Uri.parse(videoUri));
         //Audio_Converter();
-
+//      region play button click listener
         btnPlay.setOnCheckedChangeListener((buttonView, isChecked) -> {
 
             mapSecodsWithCordiates(list.size(), videoView.getDuration());
@@ -440,6 +432,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                 // marker_anim(pauseTime);
             }
         });
+//        endregion
 
         videoView.setOnCompletionListener(mp -> {
             isVideoCompleted = true;
@@ -506,13 +499,11 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
 //                }
 
             }
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 mProgressAtStartTracking = seekBar.getProgress();
                 Log.d("SEEKBAR", "START_TRACKING");
             }
-
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 Log.d("SEEKBAR", "STOP_TRACKING");
@@ -526,6 +517,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                     if (list != null) {
                         marker_anim(getVideoTime());
                     }
+//                  NOTE:  updating the marker in map
                     UpdateMarker(seekBar.getProgress());
                     Toast.makeText(SavingActivity.this, "" + mapOfPosts.size(), Toast.LENGTH_SHORT).show();
                 } else {
@@ -540,8 +532,9 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         btnSpeechToText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //         hiding the speech to text button
-                btnSpeechToText.setVisibility(View.GONE);
+                //        hiding the speech to text button layout
+                speechToTextLayout.setVisibility(View.GONE);
+                //btnSpeechToText.setVisibility(View.GONE);
 
                 dd = new DBHelper(SavingActivity.this);
                 String speech =dd.getSpeechData(filePath);
@@ -652,7 +645,8 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         });
 //        endregion
         Readlatlng();
-        showAccuracyDialogue();
+//        intentionally removed
+        //showAccuracyDialogue();
 //region creating map markers
         IconFactory iconFactory = IconFactory.getInstance(SavingActivity.this);
         icon_strt = iconFactory.fromResource(R.drawable.marker_red);
@@ -1610,6 +1604,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             }
         });
 */
+//      region map click listener
         map.addOnMapClickListener(new MapboxMap.OnMapClickListener() {
             @Override
             public void onMapClick(@NonNull LatLng point) {
@@ -1645,6 +1640,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                 }
             }
         });
+//        endregion
 
 //    mapView.getMap().setOnMapClickListener(new MapboxMap.OnMapClickListener() {
 //
@@ -1672,16 +1668,16 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         }
     }
 
-    public void showAccuracyDialogue() {
-        new AlertDialog.Builder(this, R.style.MyDialogTheme)
-                .setTitle("Alert")
-                .setMessage("For Better Accuracy please Zoom map then move marker")
-                .setPositiveButton("OK", (dialog, which) -> {
-                    dialog.dismiss();
-                })
-                .setCancelable(false)
-                .show();
-    }
+//    public void showAccuracyDialogue() {
+//        new AlertDialog.Builder(this, R.style.MyDialogTheme)
+//                .setTitle("Alert")
+//                .setMessage("For Better Accuracy please Zoom map then move marker")
+//                .setPositiveButton("OK", (dialog, which) -> {
+//                    dialog.dismiss();
+//                })
+//                .setCancelable(false)
+//                .show();
+//    }
 
     public void populateRecorder(String recorder_Str) {
         try {
@@ -1705,6 +1701,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 
     public void addMarkerNew(double distance, LatLng point, int i) {
+        Log.v("nuttygeek", "[addMarkerNew]: adding new marker on map");
         if (distance < 50) {
             // If distance is less than 100 meters, this is your polyline
             marker_start_point.remove();
@@ -1735,7 +1732,6 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                     } else {
                         if (list_overlay_polyline.size() > 0) {
                             //addOverLayPlouline(list_overlay_polyline);
-
                         }
                     }
                     previous_second++;
@@ -1783,8 +1779,8 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             salt.append(SALTCHARS.charAt(index));
         }
         String saltStr = salt.toString();
+        Log.d("nuttygeek", "[Create Color String]: #"+saltStr);
         return "#"+saltStr;
-
     }
 
 //    region creating colors to be used in map
@@ -1801,21 +1797,46 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         }
         properties.colorstr.put(cdata,cdata);
         properties.colorsdata.add(cdata);
-        Log.d("nuttygeek", "adding color: "+cdata);
+        Log.d("nuttygeek", "[Create Colors] adding color: "+cdata);
+        Log.v("nuttygeek", "Color String Hashmap: "+properties.colorstr.toString());
+        Log.v("nuttygeek", "ColorsData ArrayList: "+properties.colorsdata.toString());
     }
 //    endregion
 //    region adding polylines on map
     public void addOverLayPlouline(List<LatLng> latLngList,int ct) {
-
+        /**
+         * if first and last values of latlng list only then the polyline will be drawn on map
+         * we need to just get those lines and which are eligible to be drawn on map and get the first coordinate of that
+         * polyline and save it somewhere so that we can use it on color click event
+         */
+//        compare if first and last values are equal or not coz, it is written in docs that first and last value should be equal
+        if(latLngList.get(0).equals(latLngList.get(latLngList.size()-1))){
+//          getting the second last coordinate of the line, coz when we take first coordinate marker moves to end of the line
+            Log.v("nuttygeek", "[Size of the eligible latlng list]: "+latLngList.size());
+            LatLng secondLastCoordinate = latLngList.get(0);
+            Log.v("nuttygeek", "[Comparison] Yes ! First and last values in list are equal");
+//            saving the first coordinates ni properties class as a static arraylist
+            properties.firstCoordinatesOfPolylines.add(secondLastCoordinate);
+            Log.v("nuttygeek", "[Size of FirstCoordinate List]: "+properties.firstCoordinatesOfPolylines.size());
+            Log.v("nuttygeek", "[Size of Color List]: "+properties.colorsdata.size());
+//
+        } else{
+            Log.v("nuttygeek", "[Comparison] No! FIrst and last value sare not equal");
+        }
+//      making a hashset to get distinct values
+        pointsSet.add(latLngList.get(0));
+//      doing it coz, ct starts from 1
         PolylineOptions lineOptions = new PolylineOptions();
         //Log.d("ColorChoiceAdd:",cdata+"");
         //Log.d("ColorChoiceHash:",properties.colorstr.get(cdata)+"");
         //Toast.makeText(SavingActivity.this, ""+cdata, Toast.LENGTH_LONG).show();
-
         map.addPolyline(lineOptions
                 .width(10f)
+                //.color(Color.parseColor(properties.colorsdata.get(ct)))
                 .color(Color.parseColor(properties.colorsdata.get(ct)))
                 .addAll(latLngList));
+        Log.i("nuttygeek", "\n\n"+properties.colorsdata.get(ct) +": \n LatLngList: \n"+latLngList.toString());
+        Log.v("nuttygeek", "drawing line "+ct+" color should be "+properties.colorsdata.get(ct));
         Log.d("MapPoly", "added");
         Log.d("nuttygeek", "color: "+properties.colorsdata.get(ct)+" ct: "+ct);
         //list_overlay_polyline.clear();
@@ -1857,11 +1878,9 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             //
             //return;
         }
-        Log.d("Pollline_list", "is" + lists_pollline.size());
         int j= 0;
+        Log.v("nuttygeek", "[List Polyline]: \n\n"+lists_pollline.toString()+"\n\n");
         for (int k = 0; k < lists_pollline.size(); k++) {
-            Log.d("ListLatitude", "size" + k);
-            Log.d("ListLatitude", "size" + lists_pollline.get(k));
             //addOverLayPlouline(lists_pollline.get(k));
             if(j==ctotal-1)
             {
@@ -1870,6 +1889,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             {
                 j=j+1;
             }
+            //addOverLayPlouline(lists_pollline.get(k),j);
             addOverLayPlouline(lists_pollline.get(k),j);
         }
     }
@@ -1898,7 +1918,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 //        make adapter for color list
 //    region custom adapter for color list
-    class ColorAdapter extends BaseAdapter implements View.OnClickListener {
+    class ColorAdapter extends BaseAdapter  {
         Context context;
         ArrayList<ColorText> colorTextList;
 
@@ -1930,10 +1950,6 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         return view;
     }
 
-    @Override
-    public void onClick(View view) {
-        Toast.makeText(context, colorTextList.get(0).getColor(), Toast.LENGTH_SHORT).show();
-    }
 }
 //    endregion
 
@@ -1967,26 +1983,5 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 //    endregion
 
-//    region show loading dialog
-
-    /**
-     * this fxn shows the loading diaog when we are waiting for the server respons
-     */
-    public void showLoadingDialog(boolean flag){
-
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-        dialog.setTitle("Loading ...");
-        dialog.setMessage("Please wait while we are loading the response for you");
-        dialog.setCancelable(false);
-//        if true is passed dialog will be shown and if false will be passed dialog will be closed
-        if(flag){
-            dialog.show();
-        }else{
-            dialog.show().dismiss();
-        }
-       dialog.show();
-
-    }
-//    endregion
 
 }

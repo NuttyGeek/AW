@@ -3,6 +3,7 @@ package com.example.bhati.routeapplication.Activities;
 import android.graphics.Color;
 
 import com.google.firebase.database.snapshot.Index;
+import com.mapbox.mapboxsdk.geometry.LatLng;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,4 +23,6 @@ public class properties
     public static Double loclog=0.0;
     public static HashMap<String,String> audiodata =  new HashMap<String, String>();
     public static String Server_IP="192.168.43.205";
+//
+    public static ArrayList<LatLng> firstCoordinatesOfPolylines = new ArrayList<>();
 }

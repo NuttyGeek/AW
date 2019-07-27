@@ -56,7 +56,7 @@
             </LinearLayout>
             <!--menu -->
             <LinearLayout
-                android:layout_width="50dp"
+                android:layout_width="40dp"
                 android:id="@+id/menu"
                 android:layout_marginTop="10dp"
                 android:layout_marginLeft="5dp"
@@ -157,6 +157,7 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_weight="1.62"
+            android:id="@+id/text_speech_layout"
             android:weightSum="2"
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
@@ -182,7 +183,7 @@
                 android:layout_marginRight="@dimen/activity_horizontal_margin"
                 android:background="@drawable/button_bg_green"
                 android:gravity="center"
-                android:text="Speech To text"
+                android:text="Show Text"
                 android:textColor="@color/white" />
         </LinearLayout>
 
