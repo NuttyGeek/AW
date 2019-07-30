@@ -23,6 +23,6 @@ public class properties
     public static Double loclog=0.0;
     public static HashMap<String,String> audiodata =  new HashMap<String, String>();
     public static String Server_IP="192.168.43.205";
-//
     public static ArrayList<LatLng> firstCoordinatesOfPolylines = new ArrayList<>();
+
 }

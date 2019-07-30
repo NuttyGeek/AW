@@ -53,6 +53,7 @@ import com.example.bhati.routeapplication.Model.Recorder;
 import com.example.bhati.routeapplication.MyAppl;
 import com.example.bhati.routeapplication.R;
 import com.example.bhati.routeapplication.directionhelpers.TaskLoadedCallback;
+import com.example.bhati.routeapplication.helpers.AudioChunkDialog;
 import com.example.bhati.routeapplication.helpers.MapAndVideoSeekHelper;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.FFmpegLoadBinaryResponseHandler;
@@ -136,8 +137,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     private String str_aurdio_file;
     private String[] arrayStr;
     private String[] arrayStr1;
-//  to get the distinct no of polylines created on map
-    HashSet<LatLng> pointsSet = new HashSet<>();
+    //  to get the distinct no of polylines created on map
 
     private FirebaseAuth mAuth;
     int count = 0;
@@ -174,7 +174,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     ArrayList<ColorText> mainColorTextList;
     ColorAdapter colorAdapter;
     ImageView audioImage;
-//  Text to Speech Linear Layout
+    //  Text to Speech Linear Layout
     LinearLayout speechToTextLayout;
     MapAndVideoSeekHelper mapAndVideoSeekHelper;
 
@@ -237,11 +237,15 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Toast.makeText(SavingActivity.this, mainColorTextList.get(i).getText(), Toast.LENGTH_LONG).show();
-                showDialogWithText(mainColorTextList.get(i).getText());
-//              region calling simulate map click function
+                //using custom dialog
+                AudioChunkDialog dialog = new AudioChunkDialog(SavingActivity.this);
+                dialog.showDialog(mainColorTextList.get(i).getText());
+
+                //showDialogWithText(mainColorTextList.get(i).getText());
+                //region calling simulate map click function
                 //        create a static map location for testing, this location will be shown on map on every color click
                 Log.v("nuttygeek", "[Color Clicked]: "+i);
-//              getting the first point of the respective polyline from properties class
+                //getting the first point of the respective polyline from properties class
                 LatLng point = properties.firstCoordinatesOfPolylines.get(i);
                 mapAndVideoSeekHelper = new MapAndVideoSeekHelper();
                 mapAndVideoSeekHelper.simulateMapClick(getApplicationContext(), point, smallestDistance, list, closestLocation, new OnMarkerReadyListener() {
@@ -559,32 +563,32 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
 //                    builder.setPositiveButton("Connect", new DialogInterface.OnClickListener() {
 //                        @Override
 //                        public void onClick(DialogInterface dialog, int which) {
-                            // properties.Server_IP = input.getText().toString();
-                            // Pattern PATTERN = Pattern.compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
-                            // if(PATTERN.matcher(properties.Server_IP).matches())
-                            //{
-                                ct = 0;
-                                String filter=filePath.substring(0,filePath.length()-4);
-                                ArrayList<String> chumkfiles = FileUtils.getFileNames(Environment.getExternalStorageDirectory() + "/RouteApp","chunk_"+filter,1);
+                    // properties.Server_IP = input.getText().toString();
+                    // Pattern PATTERN = Pattern.compile("^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$");
+                    // if(PATTERN.matcher(properties.Server_IP).matches())
+                    //{
+                    ct = 0;
+                    String filter=filePath.substring(0,filePath.length()-4);
+                    ArrayList<String> chumkfiles = FileUtils.getFileNames(Environment.getExternalStorageDirectory() + "/RouteApp","chunk_"+filter,1);
 //                              for every audio chunk file do this
-                                for(int i = 0;i<chumkfiles.size();i++)
-                                {
-                                    try {
+                    for(int i = 0;i<chumkfiles.size();i++)
+                    {
+                        try {
 //                                      get the individual file path
-                                        String filePath =  Environment.getExternalStorageDirectory() + "/RouteApp/"+chumkfiles.get(i);
+                            String filePath =  Environment.getExternalStorageDirectory() + "/RouteApp/"+chumkfiles.get(i);
 //                                      upload it to server
-                                        chumkUpload(filePath,chumkfiles.size());
-                                    }catch (Exception ex)
-                                    {
-                                        Log.d("CHUMKEXP:","Error:",ex);
-                                    }
-                                }
-                                //Toast.makeText(SavingActivity.this, ct+" of "+chumkfiles.size(), Toast.LENGTH_SHORT).show();
+                            chumkUpload(filePath,chumkfiles.size());
+                        }catch (Exception ex)
+                        {
+                            Log.d("CHUMKEXP:","Error:",ex);
+                        }
+                    }
+                    //Toast.makeText(SavingActivity.this, ct+" of "+chumkfiles.size(), Toast.LENGTH_SHORT).show();
 
-                            // }else
-                            // {
-                            //     Toast.makeText(SavingActivity.this, "Ip Invalid!", Toast.LENGTH_SHORT).show();
-                            // }
+                    // }else
+                    // {
+                    //     Toast.makeText(SavingActivity.this, "Ip Invalid!", Toast.LENGTH_SHORT).show();
+                    // }
 
                     // }
                     // });
@@ -707,7 +711,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         }
     }
 
-//region saving to file
+    //region saving to file
     public static boolean saveToFile(String data,String fileName){
         try {
             String path=Environment.getExternalStorageDirectory() + "/RouteApp";
@@ -729,7 +733,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 //endregion
 
-//    region showing alert dialog
+    //    region showing alert dialog
     public  void ShowAlertDialogList()
     {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(SavingActivity.this);
@@ -739,11 +743,11 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         View convertView = (View) inflater.inflate(R.layout.dialogalertlist, null);
         // on dialog cancel button listner
         alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // TODO Auto-generated method stub
-                    }
-                });
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // TODO Auto-generated method stub
+            }
+        });
         // add custom view in dialog
         alertDialog.setView(convertView);
         ListView lv = (ListView) convertView.findViewById(R.id.dialoglist);
@@ -830,7 +834,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             return view;
         }
     }
-//    region showing dialog for actual text string
+    //    region showing dialog for actual text string
     private void showAlert(String message,String title) {
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setTitle(title);
@@ -867,7 +871,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         AlertDialog alert = builder.create();
         alert.show();*/
     }
-//   endregion
+    //   endregion
 //    region long async operation
     private class LongOperation extends AsyncTask<String, Void, String> {
 
@@ -939,7 +943,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 //    endregion
 
-// region uploading chunks
+    // region uploading chunks
     private void chumkUpload(final String imagePath,final int sizes) {
         SimpleMultiPartRequest smr = new SimpleMultiPartRequest(Request.Method.POST, Config.FILE_UPLOAD_URL,
                 new Response.Listener<String>() {
@@ -1137,7 +1141,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                 .title("End point"));
     }
 
-//    region draw main polyline
+    //    region draw main polyline
     private void draw_ployline(List<LatLng> latLngList) {
         mpolines = map.addPolyline(new PolylineOptions()
                 .width(20f)
@@ -1466,7 +1470,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             e.printStackTrace();
         }
     }
-//    region unused code
+    //    region unused code
     public void createSpeechToText(String body) {
         final long currentTimeMillis = System.currentTimeMillis();
         File folder1 = new File(Environment.getExternalStorageDirectory() + "/RouteApp");
@@ -1487,59 +1491,59 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 //    endregion
 
-/*
-    public void getText(String file_path) {
+    /*
+        public void getText(String file_path) {
 
-        try {
-            InputStream stream = getResources().openRawResource(R.raw.credentials);
-            SpeechSettings settings =
-                    SpeechSettings.newBuilder().setCredentialsProvider(
-                            new CredentialsProvider() {
-                                @Override
-                                public Credentials getCredentials() throws IOException {
-                                    return GoogleCredentials.fromStream(stream);
+            try {
+                InputStream stream = getResources().openRawResource(R.raw.credentials);
+                SpeechSettings settings =
+                        SpeechSettings.newBuilder().setCredentialsProvider(
+                                new CredentialsProvider() {
+                                    @Override
+                                    public Credentials getCredentials() throws IOException {
+                                        return GoogleCredentials.fromStream(stream);
+                                    }
                                 }
-                            }
-                    ).build();
-            SpeechClient speech = com.google.cloud.speech.v1p1beta1.SpeechClient.create(settings);
-            // The path to the audio file to transcribe
-            String fileName = file_path;
-            Log.d("FILE_Name", "IS :" + fileName);
-            // Reads the audio file into memory
-            Path path = Paths.get(fileName);
-            byte[] data = Files.readAllBytes(path);
-            ByteString audioBytes = ByteString.copyFrom(data);
+                        ).build();
+                SpeechClient speech = com.google.cloud.speech.v1p1beta1.SpeechClient.create(settings);
+                // The path to the audio file to transcribe
+                String fileName = file_path;
+                Log.d("FILE_Name", "IS :" + fileName);
+                // Reads the audio file into memory
+                Path path = Paths.get(fileName);
+                byte[] data = Files.readAllBytes(path);
+                ByteString audioBytes = ByteString.copyFrom(data);
 
-            // Builds the sync recognize request
-            RecognitionConfig config = RecognitionConfig.newBuilder()
-                    .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
-                    .setSampleRateHertz(16000)
-                    .setLanguageCode("en-US")
-                    .build();
-            RecognitionAudio audio = RecognitionAudio.newBuilder()
-                    .setContent(audioBytes)
-                    .build();
+                // Builds the sync recognize request
+                RecognitionConfig config = RecognitionConfig.newBuilder()
+                        .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
+                        .setSampleRateHertz(16000)
+                        .setLanguageCode("en-US")
+                        .build();
+                RecognitionAudio audio = RecognitionAudio.newBuilder()
+                        .setContent(audioBytes)
+                        .build();
 
-            // Performs speech recognition on the audio file
-            RecognizeResponse response = speech.recognize(config, audio);
-            List<SpeechRecognitionResult> results = response.getResultsList();
+                // Performs speech recognition on the audio file
+                RecognizeResponse response = speech.recognize(config, audio);
+                List<SpeechRecognitionResult> results = response.getResultsList();
 
-            for (SpeechRecognitionResult result : results) {
-                // There can be several alternative transcripts for a given chunk of speech. Just use the
-                // first (most likely) one here.
-                SpeechRecognitionAlternative alternative = result.getAlternativesList().get(0);
-                Log.d("Transcription:", alternative.getTranscript());
-                createSpeechToText(String.valueOf(alternative));
+                for (SpeechRecognitionResult result : results) {
+                    // There can be several alternative transcripts for a given chunk of speech. Just use the
+                    // first (most likely) one here.
+                    SpeechRecognitionAlternative alternative = result.getAlternativesList().get(0);
+                    Log.d("Transcription:", alternative.getTranscript());
+                    createSpeechToText(String.valueOf(alternative));
+                }
+                speech.close();
+            } catch (Exception ex) {
+
+                Log.d("TRANSLATING", "EXCEPTION :" + ex.getLocalizedMessage());
+
             }
-            speech.close();
-        } catch (Exception ex) {
-
-            Log.d("TRANSLATING", "EXCEPTION :" + ex.getLocalizedMessage());
-
+            //For more, refer this link
         }
-        //For more, refer this link
-    }
-*/
+    */
 //    region unused code
     public void intializeSox() {
 
@@ -1783,7 +1787,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         return "#"+saltStr;
     }
 
-//    region creating colors to be used in map
+    //    region creating colors to be used in map
     public void createColors()
     {
         boolean flag = true;
@@ -1801,31 +1805,20 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         Log.v("nuttygeek", "Color String Hashmap: "+properties.colorstr.toString());
         Log.v("nuttygeek", "ColorsData ArrayList: "+properties.colorsdata.toString());
     }
-//    endregion
+    //    endregion
 //    region adding polylines on map
+
+    /**
+     * this fxn gets no of polylines to be added on map
+     * @param latLngList latlng list to be drawn on map
+     * @param ct no of color
+     */
     public void addOverLayPlouline(List<LatLng> latLngList,int ct) {
-        /**
-         * if first and last values of latlng list only then the polyline will be drawn on map
-         * we need to just get those lines and which are eligible to be drawn on map and get the first coordinate of that
-         * polyline and save it somewhere so that we can use it on color click event
-         */
-//        compare if first and last values are equal or not coz, it is written in docs that first and last value should be equal
-        if(latLngList.get(0).equals(latLngList.get(latLngList.size()-1))){
-//          getting the second last coordinate of the line, coz when we take first coordinate marker moves to end of the line
-            Log.v("nuttygeek", "[Size of the eligible latlng list]: "+latLngList.size());
-            LatLng secondLastCoordinate = latLngList.get(0);
-            Log.v("nuttygeek", "[Comparison] Yes ! First and last values in list are equal");
-//            saving the first coordinates ni properties class as a static arraylist
-            properties.firstCoordinatesOfPolylines.add(secondLastCoordinate);
-            Log.v("nuttygeek", "[Size of FirstCoordinate List]: "+properties.firstCoordinatesOfPolylines.size());
-            Log.v("nuttygeek", "[Size of Color List]: "+properties.colorsdata.size());
-//
-        } else{
-            Log.v("nuttygeek", "[Comparison] No! FIrst and last value sare not equal");
-        }
-//      making a hashset to get distinct values
-        pointsSet.add(latLngList.get(0));
-//      doing it coz, ct starts from 1
+
+        // get the first coordinate from latlng list, add it to a list on properties class
+        properties.firstCoordinatesOfPolylines.add(latLngList.get(0));
+
+        //doing it coz, ct starts from 1
         PolylineOptions lineOptions = new PolylineOptions();
         //Log.d("ColorChoiceAdd:",cdata+"");
         //Log.d("ColorChoiceHash:",properties.colorstr.get(cdata)+"");
@@ -1835,18 +1828,15 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                 //.color(Color.parseColor(properties.colorsdata.get(ct)))
                 .color(Color.parseColor(properties.colorsdata.get(ct)))
                 .addAll(latLngList));
-        Log.i("nuttygeek", "\n\n"+properties.colorsdata.get(ct) +": \n LatLngList: \n"+latLngList.toString());
-        Log.v("nuttygeek", "drawing line "+ct+" color should be "+properties.colorsdata.get(ct));
-        Log.d("MapPoly", "added");
-        Log.d("nuttygeek", "color: "+properties.colorsdata.get(ct)+" ct: "+ct);
         //list_overlay_polyline.clear();
     }
 //   endregion
 
-//    region adding audio ploylines on map
+    //    region adding audio ploylines on map
     public void AddNewPollyLine() {
         List<LatLng> listaudio = new ArrayList<>();
         String prevaudio = "0";
+        int v=0;
         for (int j = 0; j < list1.size(); j++) {
             String time = list1.get(j).getTime().replaceAll(" ", "");
             String audio = list1.get(j).getAudio().replaceAll(" ", "");
@@ -1861,27 +1851,34 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
 
             if (prevaudio.equals("1") && audio.equals("1")) {
                 listaudio.add(new LatLng(Double.parseDouble(list1.get(j).getLat()), Double.parseDouble(list1.get(j).getLng())));
-                lists_pollline.add(listaudio);
+
             } else if (prevaudio.equals("0") && audio.equals("1")) {
                 listaudio = new ArrayList<>();
                 listaudio.add(new LatLng(Double.parseDouble(list1.get(j).getLat()), Double.parseDouble(list1.get(j).getLng())));
-                lists_pollline.add(listaudio);
+
                 prevaudio = "1";
             } else if (prevaudio.equals("1") && audio.equals("0")) {
+
                 prevaudio = "0";
-                listaudio = new ArrayList<>();
-                listaudio.add(new LatLng(Double.parseDouble(list1.get(j).getLat()), Double.parseDouble(list1.get(j).getLng())));
                 lists_pollline.add(listaudio);
+                //listaudio = new ArrayList<>();
+                // listaudio.add(new LatLng(Double.parseDouble(list1.get(j).getLat()), Double.parseDouble(list1.get(j).getLng())));
+
             } else if (prevaudio.equals("0") && audio.equals("0")) {
             }
             previous_second = seconds;
             //
             //return;
         }
+        Log.d("Pollline_list", "is" + lists_pollline.size());
         int j= 0;
-        Log.v("nuttygeek", "[List Polyline]: \n\n"+lists_pollline.toString()+"\n\n");
         for (int k = 0; k < lists_pollline.size(); k++) {
+            Log.d("ListLatitude", "size" + k);
+            Log.d("ListLatitude", "size" + lists_pollline.get(k));
             //addOverLayPlouline(lists_pollline.get(k));
+
+            addOverLayPlouline(lists_pollline.get(k),j);
+
             if(j==ctotal-1)
             {
                 j=0;
@@ -1889,9 +1886,9 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             {
                 j=j+1;
             }
-            //addOverLayPlouline(lists_pollline.get(k),j);
-            addOverLayPlouline(lists_pollline.get(k),j);
         }
+
+
     }
 //    endregion
 
@@ -1906,17 +1903,17 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         List<String> colorList = properties.colorsdata;
         ArrayList<String> textList = listChumktext;
         for (int i=0; i<textList.size(); i++){
-           String color = colorList.get(i);
-           String text = textList.get(i);
-           ColorText colorTextObj = new ColorText(color, text);
-           mainColorTextList.add(colorTextObj);
+            String color = colorList.get(i);
+            String text = textList.get(i);
+            ColorText colorTextObj = new ColorText(color, text);
+            mainColorTextList.add(colorTextObj);
         }
         colorAdapter.notifyDataSetChanged();
 //      showing the menu layout
         menuLayout.setVisibility(View.VISIBLE);
 
     }
-//        make adapter for color list
+    //        make adapter for color list
 //    region custom adapter for color list
     class ColorAdapter extends BaseAdapter  {
         Context context;
@@ -1927,30 +1924,30 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             this.colorTextList = colorTextList;
         }
 
-    @Override
-    public int getCount() {
-        return colorTextList.size();
-    }
+        @Override
+        public int getCount() {
+            return colorTextList.size();
+        }
 
-    @Override
-    public Object getItem(int i) {
-        return colorTextList.get(i);
-    }
+        @Override
+        public Object getItem(int i) {
+            return colorTextList.get(i);
+        }
 
-    @Override
-    public long getItemId(int i) {
-        return 0;
-    }
+        @Override
+        public long getItemId(int i) {
+            return 0;
+        }
 
-    @Override
-    public View getView(int i, View view, ViewGroup viewGroup) {
-        view =  getLayoutInflater().inflate(R.layout.color_list_item, null);
-        View colorView = view.findViewById(R.id.color);
-        colorView.setBackgroundColor(Color.parseColor(colorTextList.get(i).getColor()));
-        return view;
-    }
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup) {
+            view =  getLayoutInflater().inflate(R.layout.color_list_item, null);
+            View colorView = view.findViewById(R.id.color);
+            colorView.setBackgroundColor(Color.parseColor(colorTextList.get(i).getColor()));
+            return view;
+        }
 
-}
+    }
 //    endregion
 
 //    region showing dialog with text
