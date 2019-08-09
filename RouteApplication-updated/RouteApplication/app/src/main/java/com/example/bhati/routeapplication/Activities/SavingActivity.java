@@ -47,6 +47,7 @@ import android.widget.ToggleButton;
 import android.widget.VideoView;
 
 import com.example.bhati.routeapplication.Database.DBHelper;
+import com.example.bhati.routeapplication.Interface.OnKeywordsReady;
 import com.example.bhati.routeapplication.Interface.OnMarkerReadyListener;
 import com.example.bhati.routeapplication.Model.ColorText;
 import com.example.bhati.routeapplication.Model.Recorder;
@@ -54,6 +55,9 @@ import com.example.bhati.routeapplication.MyAppl;
 import com.example.bhati.routeapplication.R;
 import com.example.bhati.routeapplication.directionhelpers.TaskLoadedCallback;
 import com.example.bhati.routeapplication.helpers.AudioChunkDialog;
+import com.example.bhati.routeapplication.helpers.FramesHelper;
+import com.example.bhati.routeapplication.helpers.KeywordsDialog;
+import com.example.bhati.routeapplication.helpers.KeywordsHelper;
 import com.example.bhati.routeapplication.helpers.MapAndVideoSeekHelper;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.FFmpegLoadBinaryResponseHandler;
@@ -182,6 +186,8 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     private ArrayList<String> listChumktext;
 
     List<List<LatLng>> lists_pollline = new ArrayList<List<LatLng>>();
+    Button framesButton;
+    FramesHelper framesHelper;
 
     @SuppressLint("MissingPermission")
     @Override
@@ -193,6 +199,11 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
 //endregion
 
         setContentView(R.layout.activity_saving);
+
+
+        // creating frames helper
+        framesHelper = new FramesHelper(this);
+        framesButton = findViewById(R.id.framesButton);
 
         list = new ArrayList<>();
         list1 = new ArrayList<>();
@@ -220,6 +231,18 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         String afile = bundle.getString("AUDIOFILE");
         filePath = afile;
 
+        //region frames button click listener
+        framesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // moving to new activity
+                Intent i = new Intent(SavingActivity.this, FrameTest.class);
+                i.putExtra("videoUri", videoUri);
+                startActivity(i);
+            }
+        });
+        //endregion
+
 //       region visibilities
         btnUpload.setVisibility(View.GONE);
         menuLayout.setVisibility(View.GONE);
@@ -238,8 +261,39 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Toast.makeText(SavingActivity.this, mainColorTextList.get(i).getText(), Toast.LENGTH_LONG).show();
                 //using custom dialog
-                AudioChunkDialog dialog = new AudioChunkDialog(SavingActivity.this);
-                dialog.showDialog(mainColorTextList.get(i).getText());
+                AudioChunkDialog audioChunkDialog = new AudioChunkDialog(SavingActivity.this);
+                audioChunkDialog.showDialog(mainColorTextList.get(i).getText(), new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //TODO: call the keywords endpoint
+                        KeywordsHelper keywordsHelper = new KeywordsHelper(getApplicationContext());
+                        keywordsHelper.getKeywordsAsync("I am working on an Android Project and I have t complete it as soon as possible ", new OnKeywordsReady() {
+                            @Override
+                            public void onSuccess(ArrayList<String> keywords) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        //TODO: show dialog with keywords
+                                        showToast("keywords: "+keywords.toString());
+                                        KeywordsDialog keywordsDialog = new KeywordsDialog(SavingActivity.this);
+                                        String content  = keywordsDialog.convertListIntoString(keywords);
+                                        keywordsDialog.showDialog(content);
+                                        audioChunkDialog.dismiss();
+                                    }
+                                });
+                            }
+                            @Override
+                            public void onFailure() {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(SavingActivity.this, "Error getting Keywords !", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
 
                 //showDialogWithText(mainColorTextList.get(i).getText());
                 //region calling simulate map click function
@@ -344,9 +398,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         str = bundle.getString("listLatLng");
         str1 = bundle.getString("listOthers");
         Log.d("RECEIVED_STRING", "IS:" + str1);
-
         JSONObject JArray;
-
         try {
             JArray = new JSONObject(str1);
             JSONArray jsonArray = JArray.getJSONArray("Data");
@@ -357,19 +409,12 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                     data.put(i, explrObject.getString("LATITUDE").toString() + ":" + explrObject.getString("LONGITUDE").toString());
                 } else {
                     data.put(i, "0.0:0.0");
-
                 }
-
             }
-
-
             properties.locdata = data;
             properties.jsonArrayLocs = jsonArray;
-
             //Toast.makeText(this, "str to jsom:" + jsonArray.length(), Toast.LENGTH_LONG).show();
             Log.d("RECEIVED_STRING_Array", "IS:" + jsonArray.get(0));
-
-
         } catch (JSONException e) {
             e.printStackTrace();
             Toast.makeText(this, "data is:" + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -1814,21 +1859,15 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
      * @param ct no of color
      */
     public void addOverLayPlouline(List<LatLng> latLngList,int ct) {
-
         // get the first coordinate from latlng list, add it to a list on properties class
         properties.firstCoordinatesOfPolylines.add(latLngList.get(0));
-
         //doing it coz, ct starts from 1
         PolylineOptions lineOptions = new PolylineOptions();
-        //Log.d("ColorChoiceAdd:",cdata+"");
-        //Log.d("ColorChoiceHash:",properties.colorstr.get(cdata)+"");
-        //Toast.makeText(SavingActivity.this, ""+cdata, Toast.LENGTH_LONG).show();
         map.addPolyline(lineOptions
                 .width(10f)
                 //.color(Color.parseColor(properties.colorsdata.get(ct)))
                 .color(Color.parseColor(properties.colorsdata.get(ct)))
                 .addAll(latLngList));
-        //list_overlay_polyline.clear();
     }
 //   endregion
 
@@ -1848,53 +1887,37 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
             int total_time = hours + minutes + seconds;
             Log.d("PREVIOS_SECONDS", "IS:" + previous_second);
             Log.d("AUDIO_CHECK", prevaudio + ":" + audio);
-
             if (prevaudio.equals("1") && audio.equals("1")) {
                 listaudio.add(new LatLng(Double.parseDouble(list1.get(j).getLat()), Double.parseDouble(list1.get(j).getLng())));
-
             } else if (prevaudio.equals("0") && audio.equals("1")) {
                 listaudio = new ArrayList<>();
                 listaudio.add(new LatLng(Double.parseDouble(list1.get(j).getLat()), Double.parseDouble(list1.get(j).getLng())));
-
                 prevaudio = "1";
             } else if (prevaudio.equals("1") && audio.equals("0")) {
-
                 prevaudio = "0";
                 lists_pollline.add(listaudio);
-                //listaudio = new ArrayList<>();
-                // listaudio.add(new LatLng(Double.parseDouble(list1.get(j).getLat()), Double.parseDouble(list1.get(j).getLng())));
-
             } else if (prevaudio.equals("0") && audio.equals("0")) {
             }
             previous_second = seconds;
-            //
-            //return;
         }
         Log.d("Pollline_list", "is" + lists_pollline.size());
         int j= 0;
         for (int k = 0; k < lists_pollline.size(); k++) {
             Log.d("ListLatitude", "size" + k);
             Log.d("ListLatitude", "size" + lists_pollline.get(k));
-            //addOverLayPlouline(lists_pollline.get(k));
-
             addOverLayPlouline(lists_pollline.get(k),j);
-
-            if(j==ctotal-1)
-            {
+            if(j==ctotal-1) {
                 j=0;
-            }else
-            {
+            }else {
                 j=j+1;
             }
         }
-
-
     }
 //    endregion
 
     //        region color list functionality
     /**
-     * get the list of colors and
+     * get the list of colors
      *
      */
     public void showColorList(ArrayList<String> colors, ArrayList<String> texts){
@@ -1914,7 +1937,7 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
 
     }
     //        make adapter for color list
-//    region custom adapter for color list
+    //    region custom adapter for color list
     class ColorAdapter extends BaseAdapter  {
         Context context;
         ArrayList<ColorText> colorTextList;
@@ -1950,35 +1973,13 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 //    endregion
 
-//    region showing dialog with text
 
     /**
-     * take the text and show it in a Alert Dialog Box
+     * show toast for quick view of data
+     * @param msg message to eb shown in toats
      */
-    public void showDialogWithText(String text){
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(SavingActivity.this);
-//         set the title of the dialog
-        dialogBuilder.setTitle("Audio Chunk");
-//         set the message fo the dialog
-        dialogBuilder.setMessage(text);
-//         if keyword is pressed show the toast
-        dialogBuilder.setPositiveButton("Keyword", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Toast.makeText(SavingActivity.this, "Functionality not added yet", Toast.LENGTH_SHORT).show();
-            }
-        });
-//         if cancel is pressed dismiss the dialog
-        dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.dismiss();
-            }
-        });
-//      showing the dialog
-        dialogBuilder.show();
+    public void showToast(String msg){
+        Toast.makeText(SavingActivity.this,msg, Toast.LENGTH_LONG ).show();
     }
-//    endregion
-
 
 }

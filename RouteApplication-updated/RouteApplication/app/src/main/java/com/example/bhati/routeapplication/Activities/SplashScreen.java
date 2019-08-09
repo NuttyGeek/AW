@@ -51,7 +51,6 @@ public class SplashScreen extends AppCompatActivity {
             Toast.makeText(this, "GPS is Enabled in your device", Toast.LENGTH_SHORT).show();
             requestMultiPermission();
         }else{
-
             MyAlertMessageNoGps();
         }
 
@@ -84,7 +83,6 @@ public class SplashScreen extends AppCompatActivity {
                             handler();
                         }
                     }
-
                     @Override
                     public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
                         token.continuePermissionRequest();
@@ -96,7 +94,6 @@ public class SplashScreen extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "Error occurred! " + error.toString(), Toast.LENGTH_SHORT).show();
                     }
                 })
-
                 .onSameThread()
                 .check();
     }
