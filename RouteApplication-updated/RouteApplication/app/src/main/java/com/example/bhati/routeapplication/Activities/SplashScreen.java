@@ -9,13 +9,23 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.example.bhati.routeapplication.R;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -30,14 +40,31 @@ public class SplashScreen extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private SharedPreferences.Editor editor;
     private boolean isNewUser;
+    FirebaseAuth auth;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_splash_screen);
+        //region fixed user login
+        auth = FirebaseAuth.getInstance();
+        auth.signInWithEmailAndPassword(properties.email, properties.password).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+            @Override
+            public void onSuccess(AuthResult authResult) {
+                Log.v("nuttygeek_login", "Email: "+authResult.getUser().getEmail()+" UID: "+authResult.getUser().getUid());
+                Toast.makeText(SplashScreen.this, "UID: "+authResult.getUser().getUid(), Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                e.printStackTrace();
+                Log.v("nuttygeek_login", e.toString());
+            }
+        });
+        //endregion
+
         sharedPreferences = getSharedPreferences("user" , MODE_PRIVATE);
         isNewUser = sharedPreferences.getBoolean("isNewUser" , true);
         editor = sharedPreferences.edit();
@@ -53,7 +80,6 @@ public class SplashScreen extends AppCompatActivity {
         }else{
             MyAlertMessageNoGps();
         }
-
 //        CreatExcelSheet();
     }
 

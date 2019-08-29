@@ -25,7 +25,6 @@ import com.example.bhati.routeapplication.Activities.FileUtils;
 import com.example.bhati.routeapplication.Activities.SavingActivity;
 import com.example.bhati.routeapplication.R;
 import com.example.bhati.routeapplication.Rest.Album;
-import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,13 +33,11 @@ import java.util.concurrent.TimeUnit;
 public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.MyViewHolder> {
     private static Context mContext;
     private List<Album> albumList;
-    private FirebaseAuth mAuth;
 
     public AlbumAdapter(Context context , List<Album> albums)
     {
         this.mContext = context;
         this.albumList = albums;
-        mAuth = FirebaseAuth.getInstance();
     }
 
     @NonNull

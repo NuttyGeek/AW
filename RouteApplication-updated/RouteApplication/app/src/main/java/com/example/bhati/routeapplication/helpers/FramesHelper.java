@@ -10,10 +10,12 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.bhati.routeapplication.Activities.properties;
+import com.example.bhati.routeapplication.Pojo.FramesResult;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 
 /**
  * this class is a helper for extracting frames from video
@@ -23,27 +25,40 @@ public class FramesHelper {
     private Context context;
     private MediaMetadataRetriever metadataRetriever;
     // frame interval
+    private String videoPath;
     private int REGULAR_FRAME_INTERVAL;
+    private ArrayList<Integer> timestamps;
+    private int lengthOfVideo;
 
     public FramesHelper(Context context){
+        timestamps = new ArrayList<>();
         this.context = context;
         metadataRetriever = new MediaMetadataRetriever();
         REGULAR_FRAME_INTERVAL = properties.REGULAR_FRAME_INTERVAL_MILLIS;
     }
 
-    public void getFrameFromVideo(String path, long time, ImageView imageView){
-        // removing file:// from the path
+
+    public void setVideoPath(String path){
         String[] paths =  path.split("file://");
         Log.v("nuttygeek", "[Splited String]: "+paths[1]);
         // setting path of video file
-        metadataRetriever.setDataSource(paths[1]);
-        String lengthOfVideo = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        this.videoPath = paths[1];
+        metadataRetriever.setDataSource(videoPath);
+        String length = this.getLengthOfVideo();
+        this.lengthOfVideo = Integer.parseInt(length);
+        Log.v("nuttygeek", "[Length]: "+length);
+        // GENERATE TIME STAMPS and add it to a public property of this class
+        generateTimestamps();
+    }
+
+    public void getFrameFromVideo(int time){
         // getting image from video at particular image
-        Bitmap image = metadataRetriever.getFrameAtTime(2000, MediaMetadataRetriever.OPTION_CLOSEST);
-        String dirPath = "/RouteApp/frames/"+getFileNameFromUri(path).replace(".mp4", "");
-        String fileName = "1.jpg";
+        Bitmap image = metadataRetriever.getFrameAtTime(time, MediaMetadataRetriever.OPTION_CLOSEST);
+        String dirPath = "/RouteApp/"+getFileNameFromUriWithoutExtensions(this.videoPath);
+        String fileName = String.valueOf(time)+".jpg";
         saveBitmapToStorage(image, dirPath, fileName);
     }
+
 
 
 
@@ -85,21 +100,55 @@ public class FramesHelper {
      * @param fileUri file URI
      * @return filename
      */
-    public String getFileNameFromUri(String fileUri){
+    public String getFileNameFromUriWithExtension(String fileUri){
         return fileUri.split("/RouteApp/")[1];
     }
 
-    public void getLengthOfVideo(String videoUri){
-        String[] paths =  videoUri.split("file://");
-        String path = paths[1];
-        metadataRetriever.setDataSource(path);
-        String length = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        Log.v("nuttygeek", "Length of Video: "+length);
+    public String getFileNameFromUriWithoutExtensions(String fileUri){
+        return fileUri.split("/RouteApp/")[1].replace(".mp4", "");
     }
 
-//    public int[] getListOfIntervalTime(long ){
-//
-//    }
+    public String getLengthOfVideo(){
+        String length = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        return length;
+    }
+
+    public void generateTimestamps(){
+        Log.v("nuttygeek_time", "inside the time stamp fxn ");
+        int i=0;
+        while(i<this.lengthOfVideo){
+            Log.v("nuttygeek_time", "[val]: "+i);
+            timestamps.add(i);
+            i=i+REGULAR_FRAME_INTERVAL;
+        }
+    }
+
+    /**
+     * this fxn extracts all the frames intended from teh video
+     */
+    public void extractAllFrames(){
+        for (int i=0; i<timestamps.size();i++){
+            getFrameFromVideo(i);
+        }
+        Toast.makeText(context, "Extracted All the Frames", Toast.LENGTH_SHORT).show();
+    }
+
+
+    public FramesResult getFramesData(){
+        FramesResult res = new FramesResult();
+        res.setCar(String.valueOf(getValue()));
+        res.setVegetation(String.valueOf(getValue()));
+        res.setSnpashot(String.valueOf(getValue()));
+        res.setStreet(String.valueOf(getValue()));
+        res.setPerson(String.valueOf(getValue()));
+        return res;
+    }
+
+    public double getValue(){
+        return Math.random();
+    }
+
+
 
 
 }

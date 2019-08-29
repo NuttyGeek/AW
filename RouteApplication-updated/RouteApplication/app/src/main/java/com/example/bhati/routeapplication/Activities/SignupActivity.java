@@ -14,9 +14,6 @@ import android.widget.Toast;
 
 import com.example.bhati.routeapplication.Pojo.Users;
 import com.example.bhati.routeapplication.R;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -31,9 +28,6 @@ public class SignupActivity extends AppCompatActivity {
     String email , username , password , confirm_pasword;
 
     //Fire base Variables
-    private FirebaseAuth auth;
-    private FirebaseDatabase mDatabase;
-    private DatabaseReference mReference;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,9 +35,9 @@ public class SignupActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_signup);
-        auth = FirebaseAuth.getInstance();
-        mDatabase = FirebaseDatabase.getInstance();
-        mReference = mDatabase.getReference("users");
+//        auth = FirebaseAuth.getInstance();
+//        mDatabase = FirebaseDatabase.getInstance();
+//        mReference = mDatabase.getReference("users");
         btnLogin = findViewById(R.id.btnLogin);
         edTxtUserName = findViewById(R.id.edTxtUserName);
         edTxtPassword = findViewById(R.id.edTxtPassword);
@@ -66,32 +60,32 @@ public class SignupActivity extends AppCompatActivity {
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             mProgressDialog.setCancelable(false);
             mProgressDialog.show();
-            auth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(task -> {
-                if (task.isSuccessful())
-                {
-                    String UID = auth.getUid();
-                    Users users = new Users(email , username);
-                    mReference.child(UID).setValue(users).addOnCompleteListener(task1 -> {
-                        if (task1.isSuccessful())
-                        {
-                            mProgressDialog.dismiss();
-                            Snackbar.make(ll,"Signup successfully" , Snackbar.LENGTH_SHORT).show();
-                            startActivity(new Intent(SignupActivity.this , LoginActivity.class));
-                            finish();
-                        }
-                        else
-                        {
-                            mProgressDialog.dismiss();
-                            Snackbar.make(ll,"Something went wrong, please try again later.", Snackbar.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-                else
-                {
-                    mProgressDialog.dismiss();
-                    Toast.makeText(this, ""+task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
+//            auth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(task -> {
+//                if (task.isSuccessful())
+//                {
+//                    String UID = auth.getUid();
+//                    Users users = new Users(email , username);
+//                    mReference.child(UID).setValue(users).addOnCompleteListener(task1 -> {
+//                        if (task1.isSuccessful())
+//                        {
+//                            mProgressDialog.dismiss();
+//                            Snackbar.make(ll,"Signup successfully" , Snackbar.LENGTH_SHORT).show();
+//                            startActivity(new Intent(SignupActivity.this , LoginActivity.class));
+//                            finish();
+//                        }
+//                        else
+//                        {
+//                            mProgressDialog.dismiss();
+//                            Snackbar.make(ll,"Something went wrong, please try again later.", Snackbar.LENGTH_SHORT).show();
+//                        }
+//                    });
+//                }
+//                else
+//                {
+//                    mProgressDialog.dismiss();
+//                    Toast.makeText(this, ""+task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+//                }
+//            });
 
         });
         btnLogin.setOnClickListener(v -> {

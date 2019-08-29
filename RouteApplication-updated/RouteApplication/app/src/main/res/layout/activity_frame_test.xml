@@ -8,9 +8,31 @@
     android:layout_height="match_parent"
     tools:context=".Activities.FrameTest">
 
-    <ImageView
+    <ProgressBar
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/image"/>
+        android:id="@+id/loading"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Extract Frames"
+        android:padding="10dp"
+        android:id="@+id/extract"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Upload All Frames"
+        android:padding="10dp"
+        android:id="@+id/upload"/>
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:textSize="18dp"
+        android:id="@+id/answer"/>
 
 </LinearLayout>

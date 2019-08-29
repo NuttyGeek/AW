@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.google.firebase.FirebaseApp;
 
 
 public class MyAppl extends Application {
@@ -13,9 +14,11 @@ public class MyAppl extends Application {
     private RequestQueue mRequestQueue;
     private static MyAppl mInstance;
 
+
     @Override
     public void onCreate() {
         super.onCreate();
+        FirebaseApp.initializeApp(this);
         mInstance = this;
     }
 

@@ -62,7 +62,6 @@ import com.example.bhati.routeapplication.helpers.MapAndVideoSeekHelper;
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
 import com.github.hiteshsondhi88.libffmpeg.FFmpegLoadBinaryResponseHandler;
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
-import com.google.firebase.auth.FirebaseAuth;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
@@ -143,7 +142,6 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
     private String[] arrayStr1;
     //  to get the distinct no of polylines created on map
 
-    private FirebaseAuth mAuth;
     int count = 0;
     int ct = 0;
     int ctotal = 0;
@@ -221,12 +219,12 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
         menuLayout = findViewById(R.id.menu);
         colorList = findViewById(R.id.color_list);
 //        endregion
-        mAuth = FirebaseAuth.getInstance();
-        if (mAuth.getCurrentUser() != null) {
-            imgLogout.setVisibility(View.VISIBLE);
-        } else {
-            imgLogout.setVisibility(View.GONE);
-        }
+//        mAuth = FirebaseAuth.getInstance();
+//        if (mAuth.getCurrentUser() != null) {
+//            imgLogout.setVisibility(View.VISIBLE);
+//        } else {
+//            imgLogout.setVisibility(View.GONE);
+//        }
         Bundle bundle = getIntent().getBundleExtra("bundle_values");
         String afile = bundle.getString("AUDIOFILE");
         filePath = afile;
@@ -380,7 +378,6 @@ public class SavingActivity extends AppCompatActivity implements OnMapReadyCallb
                 popup.getMenuInflater().inflate(R.menu.signout, popup.getMenu());
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     public boolean onMenuItemClick(MenuItem item) {
-                        mAuth.signOut();
                         Toast.makeText(SavingActivity.this, "Sign out successfully", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(SavingActivity.this, Home.class));
                         finish();

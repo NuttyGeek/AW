@@ -61,7 +61,6 @@ import com.google.cloud.speech.v1.SpeechClient;
 import com.google.cloud.speech.v1.SpeechRecognitionAlternative;
 import com.google.cloud.speech.v1.SpeechRecognitionResult;
 import com.google.cloud.speech.v1.SpeechSettings;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.protobuf.ByteString;
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineListener;
@@ -133,7 +132,6 @@ public class Home extends AppCompatActivity
     private OfflineManager offlineManager;
     private ArrayList<LatLng> list;
     private boolean isCurrentlocation;
-    private FirebaseAuth mAuth;
     private GPSTracker gpsTracker;
     Timer timer;
     ArrayList<LatLng> arrayList;
@@ -161,7 +159,6 @@ public class Home extends AppCompatActivity
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        mAuth = FirebaseAuth.getInstance();
 
         setContentView(R.layout.activity_home);
         initialize();

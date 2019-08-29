@@ -1,8 +1,6 @@
 package com.example.bhati.routeapplication.Activities;
 
 import android.graphics.Color;
-
-import com.google.firebase.database.snapshot.Index;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 
 import org.json.JSONArray;
@@ -26,5 +24,8 @@ public class properties
     public static ArrayList<LatLng> firstCoordinatesOfPolylines = new ArrayList<>();
     // interval for frame extraction
     public static int REGULAR_FRAME_INTERVAL_MILLIS = 5000;
+
+    public static String email = "admin@admin.com";
+    public static String password = "adminadmin";
 
 }
